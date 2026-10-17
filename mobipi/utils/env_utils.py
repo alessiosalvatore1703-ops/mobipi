@@ -56,8 +56,11 @@ def load_env(config, override_args):
     # NOTE: in our experiments, we perform seeding via policy only
     #       since we already have 10 different scenes/layouts for eval
     #       we do not perform various seeding for env and scene model.
-    np.random.seed(0)
-    torch.manual_seed(0)
+    # MOBIPI_ENV_SEED overrides this for long repeated evals that need fresh
+    # episodes per run; unset => seed 0, byte-identical to the original.
+    env_seed = int(os.environ.get("MOBIPI_ENV_SEED", 0))
+    np.random.seed(env_seed)
+    torch.manual_seed(env_seed)
 
     # set num workers
     torch.set_num_threads(1)
@@ -73,7 +76,7 @@ def load_env(config, override_args):
         break
 
     if not "seed" in override_args:
-        env_meta["env_kwargs"]["seed"] = 0
+        env_meta["env_kwargs"]["seed"] = env_seed
     env_meta["env_kwargs"].update(override_args)
 
     print(f"Initializing environment {env_name} with seed {env_meta['env_kwargs']['seed']}.")
